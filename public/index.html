@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kwalifikacja zgłoszenia — Jev</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="admin-panel" id="admin-panel">
+      <h1>Panel administracyjny — Jev</h1>
+      <p class="status-line" id="status-line">Oczekiwanie na zgłoszenie…</p>
+
+      <div class="meters" id="meters"></div>
+
+      <div class="confidence-tile">
+        <span class="confidence-label">Pewność modelu</span>
+        <div class="confidence-track">
+          <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+        </div>
+        <span class="confidence-value" id="confidence-value">—</span>
+      </div>
+
+      <details class="raw-response">
+        <summary>Surowa odpowiedź modelu</summary>
+        <pre id="raw-json">brak</pre>
+      </details>
+    </aside>
+
+    <main class="form-panel">
+      <h1>Formularz zgłoszeniowy</h1>
+      <p class="subtitle">Odpowiedz na trzy pytania — model Jev oceni zgłoszenie w czasie rzeczywistym.</p>
+
+      <form id="qualify-form">
+        <label>
+          <span>1. Opisz swój projekt / potrzebę</span>
+          <textarea name="q1" rows="4" required placeholder="Np. potrzebuję sklepu internetowego z integracją płatności…"></textarea>
+        </label>
+
+        <label>
+          <span>2. Jaki jest Twój budżet?</span>
+          <input type="text" name="q2" required placeholder="Np. 10 000–20 000 zł" />
+        </label>
+
+        <label>
+          <span>3. Jaki jest oczekiwany termin realizacji?</span>
+          <input type="text" name="q3" required placeholder="Np. w ciągu 2 miesięcy" />
+        </label>
+
+        <button type="submit" id="submit-btn">Wyślij i sklasyfikuj</button>
+      </form>
+
+      <p class="error" id="error-line" hidden></p>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

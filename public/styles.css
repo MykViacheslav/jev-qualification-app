@@ -1,0 +1,238 @@
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --series-blue: #2a78d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --series-blue: #3987e5;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    flex-direction: column;
+  }
+}
+
+.admin-panel {
+  flex: 0 0 30%;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  padding: 24px;
+}
+
+.form-panel {
+  flex: 0 0 70%;
+  padding: 32px;
+  max-width: 720px;
+}
+
+h1 {
+  font-size: 1.15rem;
+  margin: 0 0 12px;
+}
+
+.form-panel h1 {
+  font-size: 1.4rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-top: 0;
+}
+
+.status-line {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 20px;
+}
+
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meter-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.meter-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.meter-pct {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.meter-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 5px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.confidence-tile {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gridline);
+}
+
+.confidence-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.confidence-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--series-blue);
+  transition: width 0.4s ease;
+}
+
+.confidence-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.raw-response {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.raw-response pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--page);
+  border: 1px solid var(--gridline);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--text-secondary);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+textarea,
+input[type='text'] {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--baseline);
+  border-radius: 6px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+textarea:focus,
+input[type='text']:focus {
+  outline: 2px solid var(--series-blue);
+  outline-offset: 1px;
+}
+
+button {
+  align-self: flex-start;
+  font: inherit;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--series-blue);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  color: var(--status-critical);
+  font-size: 0.85rem;
+}

@@ -1,0 +1,17 @@
+{
+  "name": "jev-qualification-app",
+  "version": "1.0.0",
+  "description": "3-question qualification form scored live by TypeSafe AI's Jev model via OpenRouter, with an admin panel showing the classification probabilities.",
+  "main": "server.js",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
