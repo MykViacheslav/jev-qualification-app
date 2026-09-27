@@ -26,12 +26,6 @@ services:
       - traefik.http.routers.jev.entrypoints=websecure
       - traefik.http.routers.jev.tls.certresolver=letsencrypt
       - traefik.http.services.jev.loadbalancer.server.port=3000
-    networks:
-      - traefik-proxy
-
-networks:
-  traefik-proxy:
-    external: true
 
 volumes:
   jev-investment-app:
