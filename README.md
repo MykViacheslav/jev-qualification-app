@@ -73,6 +73,8 @@ istniejącego zadania o tej samej nazwie.
 
 Aplikacja ma teraz odbiornik `POST /api/investments/tradingview/<token>`. Po
 otrzymaniu prawidłowego alertu Spot Compass zapisuje on JSON do folderu `inbox`.
+
+Jev rozróżnia sygnały wsparcia: `ZBLIZENIE_SUPPORTU` / `MOZLIWY_SUPPORT` (wejście w strefę ostrzegawczą) oraz `DOTKNIECIE_SUPPORTU` (świeca dotknęła linii wsparcia). Nie są one poleceniami kupna; potwierdzenie odbicia pozostaje osobnym sygnałem `ODBI_KUP`.
 `<token>` jest sekretem ustawianym wyłącznie lokalnie w
 `TRADINGVIEW_WEBHOOK_TOKEN`; nie wklejaj go do rozmowy ani do Pine Script.
 
