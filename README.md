@@ -36,24 +36,61 @@ pozwala budować i testować UI zanim podepniesz prawdziwy model.
    ```
 3. Zrestartuj serwer (`npm start`).
 
-**Ważna uwaga:** dokładny kształt zapytania/odpowiedzi Jev/OpenRouter w
-`src/jevClient.js` (endpoint `POST /api/v1/system-one`, pola `state`,
-`questions`, `probabilities`, `confidence`) został odtworzony na podstawie
-publicznej dokumentacji OpenRoutera — sandbox, w którym pisano ten kod, nie
-miał dostępu sieciowego do `openrouter.ai`, więc nie dało się tego
-zweryfikować na żywo. Jeśli pierwsze prawdziwe wywołanie zwróci błąd lub
-nieoczekiwany kształt danych, zweryfikuj go względem
-[dokumentacji Jev na OpenRouter](https://openrouter.ai/docs/guides/community/typesafe-sdk)
-i popraw `buildRequestBody` / `parseResponse` w `src/jevClient.js` — cała
-logika wywołania modelu jest odizolowana w tym jednym pliku.
+Jev wywoływany jest przez standardowy endpoint OpenRouter
+`POST https://openrouter.ai/api/v1/chat/completions` (zweryfikowane na żywo),
+z `response_format: {"type": "json_object"}` — model proszony jest o zwrot
+samych prawdopodobieństw w JSON. Cała logika jest w jednym pliku:
+`src/jevClient.js` (`buildRequestBody` / `parseResponse`), więc łatwo to
+poprawić, gdyby format odpowiedzi się zmienił.
 
 ## Struktura
 
 ```
-server.js            — serwer Express, endpointy /api/categories i /api/qualify
-src/jevClient.js      — cała logika wywołania Jev (lub mocka)
-public/               — frontend (HTML/CSS/vanilla JS, bez frameworka)
+server.js                       — serwer Express, endpointy /api/categories i /api/qualify
+src/jevClient.js                 — logika wywołania Jev dla formularza kwalifikacyjnego (lub mocka)
+public/                          — frontend (HTML/CSS/vanilla JS, bez frameworka)
+scripts/classify-mail.js         — jednorazowa klasyfikacja ręcznie zebranej paczki e-maili
+scripts/gmail-jev-classifier.js  — pełna automatyzacja: Gmail API + Jev, bez udziału Claude
 ```
+
+## Pełna automatyzacja Gmail + Jev (bez Claude w pętli)
+
+`scripts/gmail-jev-classifier.js` samodzielnie czyta pocztę z Gmaila,
+klasyfikuje ją przez Jev i nakłada etykiety `Jev/Pilne`, `Jev/Klient`,
+`Jev/Spam`, `Jev/Newsletter`, `Jev/Inne` — działa wyłącznie na Twojej
+maszynie, bez żadnego pośrednictwa czatu.
+
+### Jednorazowa konfiguracja OAuth (5–10 min)
+
+1. Wejdź na [Google Cloud Console](https://console.cloud.google.com/) →
+   utwórz projekt (albo użyj istniejącego).
+2. **APIs & Services → Library** → wyszukaj **Gmail API** → **Enable**.
+3. **APIs & Services → OAuth consent screen** → typ **External** (jeśli to
+   konto prywatne Gmail) → wypełnij nazwę aplikacji i e-mail → zapisz. Na
+   ekranie "Test users" dodaj swój adres Gmail.
+4. **APIs & Services → Credentials** → **Create Credentials → OAuth client ID**
+   → typ aplikacji: **Desktop app** → nazwij dowolnie → **Create**.
+5. Pobierz plik JSON (przycisk **Download JSON**) i zapisz go jako
+   `scripts/credentials.json` w tym repozytorium (plik jest w `.gitignore`,
+   nigdy nie trafi do gita).
+
+### Uruchomienie
+
+```bash
+npm install
+npm run classify-gmail
+```
+
+Przy pierwszym uruchomieniu skrypt wypisze link — otwórz go w przeglądarce,
+zaloguj się i zaakceptuj dostęp. Token zapisze się w `scripts/token.json`
+(też w `.gitignore`) — kolejne uruchomienia nie będą już wymagać logowania.
+
+Domyślnie skrypt przetwarza do 500 nieoznakowanych wiadomości z `Wszystkie`
+na raz (limit `GMAIL_MAX_MESSAGES` w `.env`) i całą historię skrzynki (nie
+tylko ostatnie dni) — ustaw `GMAIL_DAYS_BACK=30`, żeby ograniczyć się np. do
+ostatnich 30 dni. Uruchamiaj skrypt ponownie, aż przetworzy wszystko —
+już oznakowane wiadomości są pomijane automatycznie, więc uruchamianie
+wielokrotnie jest bezpieczne.
 
 ## Deploy na Hostinger
 

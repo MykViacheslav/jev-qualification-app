@@ -2,3 +2,5 @@ node_modules/
 .env
 *.log
 scripts/mail-batch.json
+scripts/credentials.json
+scripts/token.json
