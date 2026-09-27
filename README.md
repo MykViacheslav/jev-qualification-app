@@ -81,14 +81,18 @@ npm install
 npm run classify-gmail
 ```
 
+Przed uruchomieniem ustaw w `.env` prawdziwy `OPENROUTER_API_KEY` oraz
+`JEV_MODEL=typesafe/jev-router`. Bez klucza skrypt się zatrzyma.
+
 Przy pierwszym uruchomieniu skrypt wypisze link — otwórz go w przeglądarce,
 zaloguj się i zaakceptuj dostęp. Token zapisze się w `scripts/token.json`
 (też w `.gitignore`) — kolejne uruchomienia nie będą już wymagać logowania.
 
-Domyślnie skrypt przetwarza do 500 nieoznakowanych wiadomości z `Wszystkie`
-na raz (limit `GMAIL_MAX_MESSAGES` w `.env`) i całą historię skrzynki (nie
-tylko ostatnie dni) — ustaw `GMAIL_DAYS_BACK=30`, żeby ograniczyć się np. do
-ostatnich 30 dni. Uruchamiaj skrypt ponownie, aż przetworzy wszystko —
+Domyślnie skrypt przetwarza do 500 nieoznakowanych wiadomości z lat 2025–2026
+na raz, z całej poczty (limit `GMAIL_MAX_MESSAGES` w `.env`). Zakres można
+zmienić przez `GMAIL_DATE_FROM` i `GMAIL_DATE_BEFORE` w formacie `RRRR/MM/DD`;
+data końcowa jest wyłączna. Ustaw `GMAIL_DAYS_BACK=30`, żeby dodatkowo
+ograniczyć wyszukiwanie do ostatnich 30 dni. Uruchamiaj skrypt ponownie, aż przetworzy wszystko —
 już oznakowane wiadomości są pomijane automatycznie, więc uruchamianie
 wielokrotnie jest bezpieczne.
 
