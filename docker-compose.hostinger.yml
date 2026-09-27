@@ -1,0 +1,28 @@
+services:
+  jev-investment-receiver:
+    image: node:22-alpine
+    working_dir: /app
+    restart: unless-stopped
+    command:
+      - sh
+      - -ec
+      - |
+        if [ ! -f package.json ]; then
+          apk add --no-cache git
+          git clone --depth 1 --branch main https://github.com/MykViacheslav/jev-qualification-app.git .
+          npm ci --omit=dev
+        fi
+        exec npm start
+    environment:
+      PORT: "3000"
+      TRADINGVIEW_WEBHOOK_TOKEN: ${TRADINGVIEW_WEBHOOK_TOKEN:-}
+      TRADINGVIEW_INBOX_DIR: /data/inbox
+    ports:
+      - "3000:3000"
+    volumes:
+      - jev-investment-app:/app
+      - jev-investment-data:/data
+
+volumes:
+  jev-investment-app:
+  jev-investment-data:
