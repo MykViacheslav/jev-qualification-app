@@ -40,6 +40,8 @@ const CATEGORIES = LABELS.map((l) => l.name.replace('Jev/', ''));
 
 const MAX_MESSAGES = Number(process.env.GMAIL_MAX_MESSAGES || 500);
 const DAYS_BACK = process.env.GMAIL_DAYS_BACK ? Number(process.env.GMAIL_DAYS_BACK) : null;
+const DATE_FROM = process.env.GMAIL_DATE_FROM || '2025/01/01';
+const DATE_BEFORE = process.env.GMAIL_DATE_BEFORE || '2027/01/01';
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -107,24 +109,24 @@ async function ensureLabels(gmail) {
   return ids;
 }
 
-function buildQuery(labelIds) {
+function buildQuery() {
   const exclusions = LABELS.map((l) => `-label:"${l.name}"`).join(' ');
   const dateFilter = DAYS_BACK ? ` newer_than:${DAYS_BACK}d` : '';
-  return `in:inbox ${exclusions}${dateFilter}`;
+  return `after:${DATE_FROM} before:${DATE_BEFORE} ${exclusions}${dateFilter}`;
 }
 
-async function* listUnlabeledMessages(gmail, query) {
+async function listUnlabeledMessages(gmail, query) {
   let pageToken;
-  let fetched = 0;
+  const ids = [];
   do {
     const { data } = await gmail.users.messages.list({ userId: 'me', q: query, maxResults: 100, pageToken });
     for (const m of data.messages || []) {
-      yield m.id;
-      fetched += 1;
-      if (fetched >= MAX_MESSAGES) return;
+      ids.push(m.id);
+      if (ids.length >= MAX_MESSAGES) return ids;
     }
     pageToken = data.nextPageToken;
-  } while (pageToken && fetched < MAX_MESSAGES);
+  } while (pageToken && ids.length < MAX_MESSAGES);
+  return ids;
 }
 
 function header(headers, name) {
@@ -185,7 +187,7 @@ async function main() {
   const auth = await loadOAuthClient();
   const gmail = google.gmail({ version: 'v1', auth });
   const labelIds = await ensureLabels(gmail);
-  const query = buildQuery(labelIds);
+  const query = buildQuery();
 
   console.log(`Szukam nieoznakowanej poczty: ${query}\n`);
 
@@ -193,7 +195,9 @@ async function main() {
   let processed = 0;
   let errors = 0;
 
-  for await (const id of listUnlabeledMessages(gmail, query)) {
+  // Collect IDs before applying labels: modifying search results while paging can skip mail.
+  const messageIds = await listUnlabeledMessages(gmail, query);
+  for (const id of messageIds) {
     try {
       const { data: msg } = await gmail.users.messages.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['Subject', 'From'] });
       const email = {
