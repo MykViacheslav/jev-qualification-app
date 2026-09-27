@@ -9,60 +9,66 @@ const CATEGORIES = [
   'niezakwalifikowany',
 ];
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/system-one';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-/*
- * IMPORTANT: this environment's network sandbox could not reach openrouter.ai
- * while this file was written, so the request/response shape below was
- * reconstructed from OpenRouter's published docs summaries rather than a
- * live fetch: a System One request takes `model` + `state` + `questions`;
- * a "choice" question returns a probability per option plus an overall
- * confidence. Before relying on this against the real API, diff it against
- * https://openrouter.ai/docs/guides/community/typesafe-sdk and
- * https://openrouter.ai/typesafe/jev-router and adjust `buildRequestBody`
- * and `parseResponse` below if the field names differ.
- *
- * Set USE_MOCK_JEV=true (see .env.example) to build/demo the UI without an
- * API key or without depending on that shape being exactly right yet.
- */
+// Jev is called through OpenRouter's standard chat completions API (confirmed
+// against a live curl to this endpoint) — there is no separate "System One"
+// REST endpoint. So the classification is done by prompting the model to
+// return a JSON object with per-category probabilities and a confidence
+// score, the same way you'd get structured output from any chat model.
+function buildPrompt(answers) {
+  return `Jesteś systemem oceny zgłoszeń klienta. Oceń poniższe zgłoszenie i przypisz mu prawdopodobieństwa przynależności do czterech kategorii (od najlepszej do najgorszej): ${CATEGORIES.map((c) => `"${c}"`).join(', ')}.
+
+Opis projektu / potrzeby: ${answers.q1}
+Budżet: ${answers.q2}
+Termin realizacji: ${answers.q3}
+
+Odpowiedz WYŁĄCZNIE obiektem JSON, bez żadnego dodatkowego tekstu ani formatowania markdown, dokładnie w tym kształcie:
+{
+  "probabilities": {
+    "bardzo dobrze zakwalifikowany": 0.0,
+    "zakwalifikowany": 0.0,
+    "przeciętny": 0.0,
+    "niezakwalifikowany": 0.0
+  },
+  "confidence": 0.0
+}
+
+Prawdopodobieństwa muszą być liczbami z przedziału 0-1 i sumować się w przybliżeniu do 1. "confidence" to Twoja pewność co do tej klasyfikacji, również z przedziału 0-1.`;
+}
 
 function buildRequestBody(answers) {
-  const state = [
-    `Opis projektu / potrzeby: ${answers.q1}`,
-    `Budżet: ${answers.q2}`,
-    `Termin realizacji: ${answers.q3}`,
-  ].join('\n');
-
   return {
     model: process.env.JEV_MODEL || 'typesafe/jev-router',
-    state,
-    questions: [
-      {
-        id: 'qualification',
-        type: 'choice',
-        question:
-          'Na podstawie odpowiedzi zgłaszającego, oceń jego ogólny poziom kwalifikacji do dalszej obsługi.',
-        choices: CATEGORIES,
-      },
-    ],
+    messages: [{ role: 'user', content: buildPrompt(answers) }],
+    response_format: { type: 'json_object' },
   };
 }
 
-function parseResponse(json) {
-  const answer = Array.isArray(json.answers)
-    ? json.answers.find((a) => a.id === 'qualification') || json.answers[0]
-    : json;
+function extractJson(content) {
+  // Strip a ```json ... ``` fence if the model wraps its answer in one.
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : content;
+  return JSON.parse(candidate.trim());
+}
 
-  const probabilities = answer.probabilities || answer.choice_probabilities || {};
+function parseResponse(json) {
+  const content = json?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('Unexpected OpenRouter response shape: no choices[0].message.content.');
+  }
+
+  const parsed = extractJson(content);
+  const probabilities = parsed.probabilities || {};
   const normalized = {};
   for (const category of CATEGORIES) {
     normalized[category] = typeof probabilities[category] === 'number' ? probabilities[category] : 0;
   }
 
   return {
-    category: answer.choice || answer.answer || pickTopCategory(normalized),
+    category: pickTopCategory(normalized),
     probabilities: normalized,
-    confidence: typeof answer.confidence === 'number' ? answer.confidence : null,
+    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
     raw: json,
   };
 }
