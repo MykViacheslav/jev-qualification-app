@@ -1,0 +1,48 @@
+{
+  "stage": "stage-2-foundation",
+  "purpose": "Centralny, lokalny wybór bezpiecznej trasy AI. Ten plik nie uruchamia automatyzacji.",
+  "profiles": {
+    "jev-routine": {
+      "model": "typesafe/jev-router",
+      "reasoningEffort": "low",
+      "endpoint": "chat"
+    },
+    "jev-analysis": {
+      "model": "typesafe/jev-router",
+      "reasoningEffort": "medium",
+      "endpoint": "chat"
+    },
+    "jev-audit": {
+      "model": "typesafe/jev-1.13",
+      "reasoningEffort": null,
+      "endpoint": "decisions"
+    }
+  },
+  "workstreams": {
+    "gmail": {
+      "profile": "jev-routine",
+      "requiresFreshInputs": false,
+      "execution": "policy-controlled"
+    },
+    "investments": {
+      "profile": "jev-analysis",
+      "requiresFreshInputs": true,
+      "execution": "manual-review-required"
+    },
+    "techmodul": {
+      "profile": "jev-analysis",
+      "requiresFreshInputs": true,
+      "execution": "manual-review-required"
+    },
+    "clients": {
+      "profile": "jev-routine",
+      "requiresFreshInputs": true,
+      "execution": "manual-review-required"
+    },
+    "governance": {
+      "profile": "jev-audit",
+      "requiresFreshInputs": false,
+      "execution": "audit-only"
+    }
+  }
+}

@@ -32,6 +32,8 @@ const CALLBACK_PORT = 53682;
 const LABELS = [
   { name: 'Jev/Pilne', color: { backgroundColor: '#fb4c2f', textColor: '#ffffff' } },
   { name: 'Jev/Klient', color: { backgroundColor: '#16a765', textColor: '#ffffff' } },
+  { name: 'Jev/XTB', color: { backgroundColor: '#3c78d8', textColor: '#ffffff' } },
+  { name: 'Jev/Inwestycje', color: { backgroundColor: '#ffad47', textColor: '#000000' } },
   { name: 'Jev/Spam', color: { backgroundColor: '#666666', textColor: '#ffffff' } },
   { name: 'Jev/Newsletter', color: { backgroundColor: '#fad165', textColor: '#000000' } },
   { name: 'Jev/Inne', color: { backgroundColor: '#a479e2', textColor: '#ffffff' } },
@@ -134,7 +136,14 @@ function header(headers, name) {
 }
 
 function buildPrompt({ subject, sender, snippet }) {
-  return `Sklasyfikuj poniższy e-mail do jednej z pięciu kategorii: ${CATEGORIES.join(', ')}. Użyj "Inne" tylko gdy żadna z pozostałych czterech nie pasuje.
+  return `Sklasyfikuj poniższy e-mail do jednej z kategorii: ${CATEGORIES.join(', ')}.
+
+Zasady pierwszeństwa:
+- "XTB": każda wiadomość bezpośrednio dotycząca XTB — zlecenia, transakcje, punkty swapowe, dokumenty, konto lub komunikacja od XTB.
+- "Inwestycje": alerty rynkowe, raporty portfela, ETF-y, akcje, brokerzy i materiały inwestycyjne inne niż XTB.
+- Najpierw wybierz "XTB" lub "Inwestycje", gdy pasują; nie przypisuj takich wiadomości do "Pilne", "Klient" ani "Newsletter".
+- "Pilne": pilne ostrzeżenia bezpieczeństwa, nieautoryzowane logowania albo sprawy wymagające natychmiastowej reakcji, które nie dotyczą inwestycji.
+- "Inne": użyj tylko gdy żadna z pozostałych kategorii nie pasuje.
 
 Temat: ${subject}
 Nadawca: ${sender}

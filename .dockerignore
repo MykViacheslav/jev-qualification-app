@@ -1,8 +1,11 @@
-node_modules/
+node_modules
+.git
+.lwc
 .env
-*.log
-scripts/mail-batch.json
+.env.*
 scripts/credentials.json
 scripts/token.json
 data/investments/inbox/*.json
 data/investments/reports/*.json
+work
+npm-debug.log

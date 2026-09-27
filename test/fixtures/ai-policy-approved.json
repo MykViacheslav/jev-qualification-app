@@ -1,0 +1,13 @@
+{
+  "stage": "stage-1",
+  "ownerApproval": true,
+  "transition": { "blockNextStageUntilOwnerApproval": true },
+  "models": { "decisionGate": "typesafe/jev-1.13", "expensiveAnalysis": "not_selected" },
+  "budgetPolicy": { "separateKeyPerWorkstreamRequiredBeforeAutomation": true, "spendingLimitsRequiredBeforeAutomation": true },
+  "workstreams": {
+    "gmail": { "allowedData": ["sender", "subject", "snippet"], "allowedActions": ["apply_label"] },
+    "investments": { "allowedData": ["market_data"], "allowedActions": ["create_report"], "forbiddenActions": ["place_order"] },
+    "techmodul": { "allowedData": ["redacted_read_only_data"], "allowedActions": ["create_recommendation"], "forbiddenActions": ["change_employee_data", "change_work_time", "change_invoices", "change_inventory"] },
+    "clients": { "allowedData": ["minimum_required_data"], "allowedActions": ["draft_response"], "forbiddenActions": ["send_message"] }
+  }
+}

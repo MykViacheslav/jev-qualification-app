@@ -1,0 +1,22 @@
+{
+  "mode": "read-only",
+  "sources": {
+    "tradingview-json-alerts": {
+      "status": "receiver-ready-public-url-required",
+      "purpose": "Alerty Spot Compass w formacie JSON oraz dane wielointerwałowe przygotowane przez użytkownika.",
+      "allowedFields": ["symbol", "timeframe", "close", "support", "warning", "bar_time", "signal"]
+    },
+    "market-snapshot": {
+      "status": "ready-for-local-import",
+      "purpose": "Zweryfikowany zrzut cen i poziomów 1D, 12H oraz 6H do raportu porannego."
+    },
+    "coinglass": {
+      "status": "not-connected",
+      "purpose": "Opcjonalne dane dotyczące wyłącznie kryptowalut; wymaga osobnego wyboru zakresu i połączenia."
+    },
+    "gmail-investments": {
+      "status": "not-connected",
+      "purpose": "Późniejsze wejście pomocnicze z etykiet Jev/Inwestycje i Jev/XTB; nie jest źródłem cen."
+    }
+  }
+}

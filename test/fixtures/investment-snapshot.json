@@ -1,0 +1,18 @@
+{
+  "asOf": "2026-09-27T07:00:00.000Z",
+  "source": "tradingview-json-alerts",
+  "instruments": [
+    {
+      "symbol": "NASDAQ:META",
+      "price": 352.81,
+      "status": "NEAR",
+      "signal": "MOZLIWY_SUPPORT",
+      "intervals": {
+        "1D": { "support": 340, "resistance": 370, "distanceToSupportPct": 3.63, "distanceToSupportAtr": 1.2 },
+        "12H": { "support": 345, "resistance": 365, "distanceToSupportPct": 2.26, "distanceToSupportAtr": 0.9 },
+        "6H": { "support": 348, "resistance": 360, "distanceToSupportPct": 1.38, "distanceToSupportAtr": 0.6 }
+      }
+    }
+  ],
+  "newCandidates": []
+}

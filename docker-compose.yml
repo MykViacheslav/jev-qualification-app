@@ -1,0 +1,27 @@
+services:
+  jev-investment-receiver:
+    build:
+      context: https://github.com/MykViacheslav/jev-qualification-app.git#main
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      TRADINGVIEW_WEBHOOK_TOKEN: ${TRADINGVIEW_WEBHOOK_TOKEN:-}
+      TRADINGVIEW_INBOX_DIR: /data/inbox
+    volumes:
+      - jev-investment-data:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3000
+    networks:
+      - traefik-proxy
+
+networks:
+  traefik-proxy:
+    external: true
+
+volumes:
+  jev-investment-data:

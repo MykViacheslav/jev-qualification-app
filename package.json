@@ -9,7 +9,12 @@
   },
   "scripts": {
     "start": "node server.js",
-    "classify-gmail": "node scripts/gmail-jev-classifier.js"
+    "classify-gmail": "node scripts/gmail-jev-classifier.js",
+    "verify-ai-policy": "node scripts/verify-ai-policy.js",
+    "inspect-ai-plan": "node scripts/inspect-ai-plan.js",
+    "build-morning-report": "node scripts/build-morning-report.js",
+    "run-morning-report": "node scripts/run-morning-report.js",
+    "test": "node --test"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

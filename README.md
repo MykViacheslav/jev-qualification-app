@@ -11,6 +11,82 @@ na żywo przez model **Jev** (TypeSafe AI), wywoływany przez **OpenRouter**.
 Kategorie (od najlepszej do najgorszej): *bardzo dobrze zakwalifikowany*,
 *zakwalifikowany*, *przeciętny*, *niezakwalifikowany*.
 
+## AI Hub — etap 2
+
+`config/ai-hub.json` jest jednym miejscem, gdzie ustawiamy trasę dla każdego
+obszaru: model, poziom rozumowania i typ wywołania. Obecnie:
+
+- rutynowe zadania: Jev Router + niski poziom rozumowania;
+- analiza: Jev Router + średni poziom rozumowania;
+- kontrola zasad: Jev 1.13 przez endpoint Decisions.
+
+Hub tylko przygotowuje bezpieczny plan. Nie przesyła danych, nie składa zleceń
+i nie wysyła wiadomości. Sprawdzenie planu, bez użycia API i bez kosztu:
+
+```bash
+npm run inspect-ai-plan -- investments create_report
+```
+
+Przykład zabronionej akcji (`place_order`) zakończy się blokadą zgodną z
+`config/ai-policy.json`.
+
+## Dane do raportu inwestycyjnego — etap 3
+
+Raport działa wyłącznie w trybie odczytu. Przyjmuje zrzut danych w JSON oraz
+Twoją listę TradingView, wybiera tylko sytuacje wymagające uwagi i wyraźnie
+oznacza brakujące lub nieaktualne dane. Nie wywołuje AI, nie składa zleceń i
+nie zmienia watchlisty.
+
+Przykładowe sprawdzenie na bezpiecznych danych testowych:
+
+```powershell
+npm run build-morning-report -- --snapshot test/fixtures/investment-snapshot.json --watchlist "C:\Users\mykyt\Downloads\Lista Obserwowanych_7ae55.txt"
+```
+
+`config/investment-sources.json` zawiera stan źródeł. TradingView jest gotowy
+do lokalnego importu JSON; CoinGlass i Gmail inwestycyjny pozostają jeszcze
+niepodłączone.
+
+### Lokalny automat plikowy
+
+Wrzuć rzeczywisty zrzut JSON do `data/investments/inbox/`. Automat wybiera
+najnowszy według pola `asOf`, a raport zapisuje tylko lokalnie w
+`data/investments/reports/` (te pliki są wykluczone z gita).
+
+```powershell
+npm run run-morning-report -- --watchlist "C:\Users\mykyt\Downloads\Lista Obserwowanych_7ae55.txt"
+```
+
+Do bezpiecznej próby bez prawdziwych danych użyj folderu z przykładem jako
+wejścia. Po sprawdzeniu usuwasz parametr `--input-dir` i korzystasz z folderu
+`inbox`.
+
+```powershell
+npm run run-morning-report -- --input-dir data/investments/examples --watchlist "C:\Users\mykyt\Downloads\Lista Obserwowanych_7ae55.txt"
+```
+
+Skrypt `scripts/install-morning-report-task.ps1` dopiero po ręcznym uruchomieniu
+utworzy codzienne zadanie Windows. Nie instaluje go sam i nie nadpisuje
+istniejącego zadania o tej samej nazwie.
+
+### Automatyczny odbiór alertów TradingView
+
+Aplikacja ma teraz odbiornik `POST /api/investments/tradingview/<token>`. Po
+otrzymaniu prawidłowego alertu Spot Compass zapisuje on JSON do folderu `inbox`.
+`<token>` jest sekretem ustawianym wyłącznie lokalnie w
+`TRADINGVIEW_WEBHOOK_TOKEN`; nie wklejaj go do rozmowy ani do Pine Script.
+
+TradingView musi dostać publiczny adres tej aplikacji, na przykład:
+
+```text
+https://twoja-domena.example/api/investments/tradingview/TWÓJ_SEKRETNY_TOKEN
+```
+
+W oknie alertu wybierz warunek Spot Compass, a nie zwykłą pozycję `Cena`.
+Obecny format alertów skanera jest przyjmowany automatycznie. Pojedynczy alert
+zawiera tylko fragment danych, więc raport oznaczy brak interwałów 1D/12H/6H
+zamiast udawać pełną analizę.
+
 ## Szybki start
 
 ```bash
@@ -57,8 +133,12 @@ scripts/gmail-jev-classifier.js  — pełna automatyzacja: Gmail API + Jev, bez 
 
 `scripts/gmail-jev-classifier.js` samodzielnie czyta pocztę z Gmaila,
 klasyfikuje ją przez Jev i nakłada etykiety `Jev/Pilne`, `Jev/Klient`,
-`Jev/Spam`, `Jev/Newsletter`, `Jev/Inne` — działa wyłącznie na Twojej
-maszynie, bez żadnego pośrednictwa czatu.
+`Jev/XTB`, `Jev/Inwestycje`, `Jev/Spam`, `Jev/Newsletter`, `Jev/Inne` —
+działa wyłącznie na Twojej maszynie, bez żadnego pośrednictwa czatu.
+
+Wiadomości dotyczące XTB mają pierwszeństwo przed pozostałymi kategoriami
+inwestycyjnymi; alerty i materiały inwestycyjne innych nadawców trafiają do
+`Jev/Inwestycje`.
 
 ### Jednorazowa konfiguracja OAuth (5–10 min)
 
