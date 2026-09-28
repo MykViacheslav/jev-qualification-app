@@ -5,7 +5,7 @@ atrLength = input.int(50, "ATR length", minval=1)
 emaLength = input.int(50, "EMA length", minval=1)
 atrMult = input.float(2.0, "Support width", minval=0.1, step=0.1)
 nearAtr = input.float(0.35, "Approach distance (ATR)", minval=0.05, step=0.05)
-cooldownBars = input.int(12, "Cooldown (bars)", minval=1)
+alertCooldown = input.int(12, "Cooldown (bars)", minval=1)
 
 atrValue = ta.atr(atrLength)
 basis = ta.ema(close, emaLength)
@@ -19,8 +19,8 @@ approachRaw = close > support and low <= nearThreshold and low > support
 touchRaw = low <= support and low[1] > support[1]
 var int lastApproachBar = na
 var int lastTouchBar = na
-supportApproach = barstate.isconfirmed and approachRaw and (na(lastApproachBar) or bar_index - lastApproachBar > cooldownBars)
-supportTouch = barstate.isconfirmed and touchRaw and (na(lastTouchBar) or bar_index - lastTouchBar > cooldownBars)
+supportApproach = barstate.isconfirmed and approachRaw and (na(lastApproachBar) or bar_index - lastApproachBar > alertCooldown)
+supportTouch = barstate.isconfirmed and touchRaw and (na(lastTouchBar) or bar_index - lastTouchBar > alertCooldown)
 if supportApproach
     lastApproachBar := bar_index
 if supportTouch
