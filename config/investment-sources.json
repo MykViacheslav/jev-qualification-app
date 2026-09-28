@@ -18,21 +18,25 @@
       "status": "not-connected",
       "purpose": "Późniejsze wejście pomocnicze z etykiet Jev/Inwestycje i Jev/XTB; nie jest źródłem cen."
     },
+    "notion-investment-knowledge": {
+      "status": "reference-available",
+      "purpose": "Uzgodniona baza wiedzy inwestycyjnej, stała lista kanałów i historyczne raporty. Jest źródłem zasad i kandydatów, nie bieżących cen."
+    },
     "xtb": {
-      "status": "not-connected",
-      "purpose": "Pomocnicze potwierdzenia instrumentów, transakcji i wiadomości z XTB; wymaga osobnego dostępu i nie jest źródłem cen rynkowych."
+      "status": "known-in-notion-not-connected",
+      "purpose": "Pomocnicze potwierdzenia instrumentów, transakcji i wiadomości z XTB. Jest uwzględnione w dotychczasowych raportach Notion, ale nie ma bezpośredniego połączenia z kontem."
     },
     "freedom24": {
-      "status": "not-connected",
-      "purpose": "Pomocnicze dane o instrumentach i dokumentach z Freedom24; wymaga osobnego dostępu i nie jest źródłem cen rynkowych."
+      "status": "known-in-notion-not-connected",
+      "purpose": "Freedom24 Investment Ideas jako źródło kandydatów spoza głównej listy. Nie ma bezpośredniego połączenia z kontem ani automatycznego pobierania."
     },
     "investing-pro": {
-      "status": "not-connected",
-      "purpose": "Analizy i screener Investing Pro; wymaga osobnego dostępu. Wnioski wymagają niezależnego potwierdzenia aktualnymi danymi rynkowymi."
+      "status": "requires-exact-link",
+      "purpose": "Investing.com jest wskazane w Notion jako skaner rotacji sektorowej i sentymentu. Osobne źródło nazwane „investinpro” wymaga dokładnego adresu lub nazwy kanału przed podłączeniem."
     },
     "youtube-watchlists": {
-      "status": "requires-source-links",
-      "purpose": "Kandydaci z uzgodnionych kanałów YouTube. Każdy kandydat wymaga linku, daty materiału, tickeru oraz niezależnej weryfikacji."
+      "status": "known-in-notion-not-connected",
+      "purpose": "Kandydaci i zasady z uzgodnionych kanałów, m.in. Ben Felix / Rational Reminder oraz Mądre Inwestycje. Każdy kandydat wymaga daty materiału, tickeru i niezależnej weryfikacji."
     },
     "discord-watchlists": {
       "status": "requires-user-connection",
