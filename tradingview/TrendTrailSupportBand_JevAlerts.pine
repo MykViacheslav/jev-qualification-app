@@ -1,0 +1,128 @@
+//@version=5
+indicator("Trend Trail + Support Band — Jev alerts", shorttitle="TrendTrail Jev", overlay=true)
+
+// Własna rekonstrukcja Trend Trail / Support Band na podstawie obserwacji
+// wykresów użytkownika. Nie jest kopią kodu wskaźnika innego autora.
+// Alerty Jev są tylko informacyjne: nie otwierają ani nie zamykają pozycji.
+
+grpTrail = "Gold Line (Trailing Stop)"
+atrLen = input.int(22, "ATR Length", minval=1, group=grpTrail)
+atrMult = input.float(2.0, "ATR Multiplier", minval=0.1, step=0.1, group=grpTrail)
+minBars = input.int(5, "Min Bars Between Signals (cooldown)", minval=0, group=grpTrail)
+showTrail = input.bool(true, "Show Gold Line", group=grpTrail)
+
+grpBand = "Support Band Pro"
+bandLen = input.int(50, "EMA Length", minval=1, group=grpBand)
+bandMult = input.float(2.0, "ATR Multiplier", minval=0.1, step=0.1, group=grpBand)
+showBand = input.bool(true, "Show Band", group=grpBand)
+
+grpSupport = "Jev — alerty supportu"
+supportApproachAtr = input.float(0.35, "Odległość zbliżenia (ATR)", minval=0.05, step=0.05, group=grpSupport, tooltip="Alert ZBLIŻENIE_SUPPORTU pojawi się, gdy minimum świecy znajdzie się maksymalnie tyle ATR nad dolną linią supportu.")
+supportCooldown = input.int(12, "Przerwa między alertami (świece)", minval=1, group=grpSupport)
+showSupportMarks = input.bool(true, "Pokaż znaczniki supportu", group=grpSupport)
+
+grpSig = "Radar Signals"
+showSignals = input.bool(true, "Show Buy/Sell Labels", group=grpSig)
+showMarkers = input.bool(true, "Show Triangle Markers", group=grpSig)
+onlyConfirmed = input.bool(true, "Pokazuj TYLKO sygnały potwierdzone przez RSI", group=grpSig)
+
+grpRsi = "RSI Confluence"
+rsiLen = input.int(14, "RSI Length", minval=1, group=grpRsi)
+rsiOversold = input.int(30, "RSI Oversold", group=grpRsi)
+rsiOverbought = input.int(70, "RSI Overbought", group=grpRsi)
+rsiLookback = input.int(10, "RSI Lookback (bars)", minval=1, group=grpRsi)
+
+grpSwing = "Odległość od ostatniego szczytu/dołka"
+showSwingTable = input.bool(true, "Pokaż tabelkę %", group=grpSwing)
+showSwingLines = input.bool(true, "Pokaż linie poziome", group=grpSwing)
+structLookback = input.int(150, "Zasięg szukania szczytu/dołka (świece)", minval=10, group=grpSwing)
+
+// Gold Line (ATR Trailing Stop)
+atr = ta.atr(atrLen)
+upperBasic = close + atrMult * atr
+lowerBasic = close - atrMult * atr
+var float trailingStop = na
+var int dir = 1
+var int barsSinceFlip = 0
+
+longStop = lowerBasic
+shortStop = upperBasic
+longStopPrev = nz(trailingStop[1], longStop)
+shortStopPrev = nz(trailingStop[1], shortStop)
+longStop := close[1] > longStopPrev ? math.max(longStop, longStopPrev) : longStop
+shortStop := close[1] < shortStopPrev ? math.min(shortStop, shortStopPrev) : shortStop
+
+canFlip = barsSinceFlip >= minBars
+wantFlipUp = dir == -1 and close > shortStopPrev and canFlip
+wantFlipDown = dir == 1 and close < longStopPrev and canFlip
+newDir = wantFlipUp ? 1 : wantFlipDown ? -1 : dir
+barsSinceFlip := newDir != dir ? 0 : barsSinceFlip + 1
+dir := newDir
+trailingStop := dir == 1 ? longStop : shortStop
+plot(showTrail ? trailingStop : na, "Gold Line", color=dir == 1 ? color.yellow : color.gray, style=plot.style_stepline, linewidth=2)
+
+// Support Band Pro
+basis = ta.ema(close, bandLen)
+bandAtr = ta.atr(bandLen)
+upperBand = basis + bandMult * bandAtr
+lowerBand = basis - bandMult * bandAtr
+pUpper = plot(showBand ? upperBand : na, "Band Upper", color=color.new(color.fuchsia, 40))
+pLower = plot(showBand ? lowerBand : na, "Band Lower", color=color.new(color.yellow, 60))
+fill(pUpper, pLower, color=color.new(color.gray, 85), title="Support Band")
+
+// Jev: rozróżnienie zbliżenia i prawdziwego dotknięcia dolnej linii supportu.
+// Sygnały powstają wyłącznie po zamknięciu świecy, aby nie wysyłać ich w trakcie jej tworzenia.
+var int lastSupportSignalBar = na
+supportReady = na(lastSupportSignalBar) or bar_index - lastSupportSignalBar >= supportCooldown
+touchRaw = low <= lowerBand and low[1] > lowerBand[1]
+approachRaw = low > lowerBand and low <= lowerBand + supportApproachAtr * bandAtr
+supportTouch = barstate.isconfirmed and supportReady and touchRaw
+supportApproach = barstate.isconfirmed and supportReady and approachRaw and not touchRaw
+if supportTouch or supportApproach
+    lastSupportSignalBar := bar_index
+
+plotshape(showSupportMarks and supportApproach, title="Jev — zbliżenie do supportu", location=location.belowbar, style=shape.circle, color=color.orange, size=size.tiny, text="JEV")
+plotshape(showSupportMarks and supportTouch, title="Jev — dotknięcie supportu", location=location.belowbar, style=shape.triangleup, color=color.aqua, size=size.small, text="JEV")
+
+// Radar Buy/Sell + RSI confluence
+buySignal = dir == 1 and dir[1] == -1
+sellSignal = dir == -1 and dir[1] == 1
+rsi = ta.rsi(close, rsiLen)
+wasOversold = ta.lowest(rsi, rsiLookback) < rsiOversold
+wasOverbought = ta.highest(rsi, rsiLookback) > rsiOverbought
+buyConfirmed = buySignal and wasOversold
+sellConfirmed = sellSignal and wasOverbought
+displayBuy = onlyConfirmed ? buyConfirmed : buySignal
+displaySell = onlyConfirmed ? sellConfirmed : sellSignal
+
+var float lastBuyPrice = na
+if displayBuy
+    lastBuyPrice := close
+sellPct = displaySell and not na(lastBuyPrice) ? (close - lastBuyPrice) / lastBuyPrice * 100 : na
+if showSignals and displayBuy
+    label.new(bar_index, low, buyConfirmed ? "Buy ★ (RSI)" : "Buy", style=label.style_label_up, color=buyConfirmed ? color.lime : color.green, textcolor=color.white, yloc=yloc.belowbar)
+if showSignals and displaySell
+    sellText = (sellConfirmed ? "Sell ★ (RSI) | " : "Sell | ") + str.tostring(sellPct, "#.##") + "%"
+    label.new(bar_index, high, sellText, style=label.style_label_down, color=sellConfirmed ? color.maroon : (sellPct >= 0 ? color.green : color.red), textcolor=color.white, yloc=yloc.abovebar)
+plotshape(showMarkers and displayBuy, title="Buy Marker", location=location.belowbar, style=shape.triangleup, color=color.green, size=size.tiny)
+plotshape(showMarkers and displaySell, title="Sell Marker", location=location.abovebar, style=shape.triangledown, color=color.red, size=size.tiny)
+
+// Odległość od ostatniego szczytu / dołka
+refHigh = ta.highest(high, structLookback)
+refLow = ta.lowest(low, structLookback)
+pctFromHigh = (close - refHigh) / refHigh * 100
+pctFromLow = (close - refLow) / refLow * 100
+plot(showSwingLines ? refHigh : na, "Ostatni szczyt", color=color.new(color.orange, 20), style=plot.style_stepline, linewidth=1)
+plot(showSwingLines ? refLow : na, "Ostatni dołek", color=color.new(color.aqua, 20), style=plot.style_stepline, linewidth=1)
+var table swingTable = table.new(position.bottom_right, 2, 2, border_width=1)
+if showSwingTable and barstate.islast
+    table.cell(swingTable, 0, 0, "Od szczytu", text_color=color.white, bgcolor=color.new(color.orange, 70))
+    table.cell(swingTable, 1, 0, na(pctFromHigh) ? "—" : str.tostring(pctFromHigh, "#.##") + "%", text_color=nz(pctFromHigh, -1) >= 0 ? color.lime : color.red, bgcolor=color.new(color.orange, 70))
+    table.cell(swingTable, 0, 1, "Od dołka", text_color=color.white, bgcolor=color.new(color.aqua, 70))
+    table.cell(swingTable, 1, 1, na(pctFromLow) ? "—" : str.tostring(pctFromLow, "#.##") + "%", text_color=nz(pctFromLow, -1) >= 0 ? color.lime : color.red, bgcolor=color.new(color.aqua, 70))
+
+// JSON jest wymagany przez odbiornik Jev. {{time}} jest datą ISO przekazywaną przez TradingView.
+alertcondition(supportApproach, title="Jev — zbliżenie do supportu", message="{\"event\":\"spot_compass_support\",\"signal\":\"ZBLIZENIE_SUPPORTU\",\"symbol\":\"{{ticker}}\",\"timeframe\":\"{{interval}}\",\"close\":{{close}},\"support\":{{plot(\"Band Lower\")}},\"warning\":{{plot(\"Band Upper\")}},\"bar_time\":\"{{time}}\"}")
+alertcondition(supportTouch, title="Jev — dotknięcie supportu", message="{\"event\":\"spot_compass_support\",\"signal\":\"DOTKNIECIE_SUPPORTU\",\"symbol\":\"{{ticker}}\",\"timeframe\":\"{{interval}}\",\"close\":{{close}},\"support\":{{plot(\"Band Lower\")}},\"warning\":{{plot(\"Band Upper\")}},\"bar_time\":\"{{time}}\"}")
+alertcondition(buySignal, title="Buy Signal", message="BUY signal on {{ticker}} at {{close}}")
+alertcondition(sellSignal, title="Sell Signal", message="SELL signal on {{ticker}} at {{close}}")
