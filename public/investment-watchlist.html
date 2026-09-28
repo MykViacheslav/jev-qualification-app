@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jev — prywatna lista obserwowanych</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
+      label { display: block; margin-top: 1rem; font-weight: 600; }
+      input, button { box-sizing: border-box; font: inherit; margin-top: .35rem; padding: .6rem; width: 100%; }
+      button { cursor: pointer; }
+      #status { min-height: 1.5rem; margin-top: 1rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Prywatna lista obserwowanych</h1>
+    <p>Plik trafia wyłącznie na chroniony wolumen Jev VPS. Nie jest publikowany w repozytorium.</p>
+    <form id="upload-form">
+      <label for="token">Sekret Jev</label>
+      <input id="token" name="token" type="password" autocomplete="off" required>
+      <label for="watchlist">Plik listy obserwowanych</label>
+      <input id="watchlist" name="watchlist" type="file" accept=".txt,text/plain" required>
+      <button type="submit">Zapisz prywatną listę</button>
+    </form>
+    <p id="status" role="status"></p>
+    <script>
+      const form = document.querySelector('#upload-form');
+      const status = document.querySelector('#status');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const token = document.querySelector('#token').value;
+        const file = document.querySelector('#watchlist').files[0];
+        if (!file) return;
+        status.textContent = 'Zapisywanie…';
+        try {
+          const response = await fetch(`/api/investments/watchlist/${encodeURIComponent(token)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: await file.text(),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Nie udało się zapisać listy.');
+          document.querySelector('#token').value = '';
+          form.reset();
+          status.textContent = `Zapisano prywatną listę: ${result.instrumentCount} instrumentów.`;
+        } catch (error) {
+          status.textContent = error.message || 'Nie udało się zapisać listy.';
+        }
+      });
+    </script>
+  </body>
+</html>

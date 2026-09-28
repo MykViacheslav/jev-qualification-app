@@ -6,3 +6,4 @@ scripts/credentials.json
 scripts/token.json
 data/investments/inbox/*.json
 data/investments/reports/*.json
+data/investments/watchlist.txt

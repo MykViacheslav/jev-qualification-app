@@ -17,6 +17,11 @@ services:
       PORT: "3000"
       TRADINGVIEW_WEBHOOK_TOKEN: ${TRADINGVIEW_WEBHOOK_TOKEN:-}
       TRADINGVIEW_INBOX_DIR: /data/inbox
+      WATCHLIST_PATH: /data/watchlist/watchlist.txt
+      DAILY_REPORT_DIR: /data/reports
+      DAILY_REPORT_ENABLED: "true"
+      DAILY_REPORT_HOUR: "8"
+      DAILY_REPORT_TIMEZONE: Europe/Warsaw
     volumes:
       - jev-investment-app:/app
       - jev-investment-data:/data

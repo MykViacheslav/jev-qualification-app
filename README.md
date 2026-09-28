@@ -89,6 +89,17 @@ Obecny format alertów skanera jest przyjmowany automatycznie. Pojedynczy alert
 zawiera tylko fragment danych, więc raport oznaczy brak interwałów 1D/12H/6H
 zamiast udawać pełną analizę.
 
+### Codzienny raport sygnałów na VPS
+
+Wariant VPS zapisuje o 08:00 czasu Warszawy prywatny raport JSON z alertów
+TradingView z ostatnich 24 godzin. To **raport częściowy**: pokazuje wyłącznie
+odebrane sygnały i nigdy nie udaje pełnych cen lub analizy 1D/12H/6H dla całej
+listy.
+
+Lista obserwowanych nie jest w repozytorium. Wgrywa się ją jednorazowo do
+chronionego wolumenu VPS przez endpoint zabezpieczony tym samym sekretem co
+webhook. Najnowszy raport jest dostępny wyłącznie przez zabezpieczony endpoint.
+
 ## Szybki start
 
 ```bash
