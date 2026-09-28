@@ -44,8 +44,9 @@ npm run build-morning-report -- --snapshot test/fixtures/investment-snapshot.jso
 ```
 
 `config/investment-sources.json` zawiera stan źródeł. TradingView jest gotowy
-do lokalnego importu JSON; CoinGlass i Gmail inwestycyjny pozostają jeszcze
-niepodłączone.
+do lokalnego importu JSON. CoinGlass, Gmail inwestycyjny, XTB, Freedom24 i
+Investing Pro pozostają jeszcze niepodłączone. Kandydaci z YouTube i Discorda
+wymagają wskazania konkretnych kanałów lub serwerów oraz niezależnej weryfikacji.
 
 ### Lokalny automat plikowy
 

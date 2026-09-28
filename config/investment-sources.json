@@ -17,6 +17,26 @@
     "gmail-investments": {
       "status": "not-connected",
       "purpose": "Późniejsze wejście pomocnicze z etykiet Jev/Inwestycje i Jev/XTB; nie jest źródłem cen."
+    },
+    "xtb": {
+      "status": "not-connected",
+      "purpose": "Pomocnicze potwierdzenia instrumentów, transakcji i wiadomości z XTB; wymaga osobnego dostępu i nie jest źródłem cen rynkowych."
+    },
+    "freedom24": {
+      "status": "not-connected",
+      "purpose": "Pomocnicze dane o instrumentach i dokumentach z Freedom24; wymaga osobnego dostępu i nie jest źródłem cen rynkowych."
+    },
+    "investing-pro": {
+      "status": "not-connected",
+      "purpose": "Analizy i screener Investing Pro; wymaga osobnego dostępu. Wnioski wymagają niezależnego potwierdzenia aktualnymi danymi rynkowymi."
+    },
+    "youtube-watchlists": {
+      "status": "requires-source-links",
+      "purpose": "Kandydaci z uzgodnionych kanałów YouTube. Każdy kandydat wymaga linku, daty materiału, tickeru oraz niezależnej weryfikacji."
+    },
+    "discord-watchlists": {
+      "status": "requires-user-connection",
+      "purpose": "Kandydaci z uzgodnionych serwerów lub kanałów Discord. Brak automatycznego dostępu bez osobnego połączenia albo eksportu udostępnionego przez właściciela."
     }
   }
 }
