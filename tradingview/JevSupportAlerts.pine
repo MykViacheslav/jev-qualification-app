@@ -1,0 +1,33 @@
+//@version=6
+indicator("Jev Support Alerts", shorttitle="Jev Support", overlay=true)
+
+atrLength = input.int(50, "ATR length", minval=1)
+emaLength = input.int(50, "EMA length", minval=1)
+atrMult = input.float(2.0, "Support width", minval=0.1, step=0.1)
+nearAtr = input.float(0.35, "Approach distance (ATR)", minval=0.05, step=0.05)
+cooldownBars = input.int(12, "Cooldown (bars)", minval=1)
+
+atrValue = ta.atr(atrLength)
+basis = ta.ema(close, emaLength)
+support = basis - atrMult * atrValue
+nearThreshold = support + nearAtr * atrValue
+
+plot(support, "Jev Support", color=color.aqua, linewidth=2)
+plot(nearThreshold, "Jev Support approach", color=color.new(color.aqua, 70), style=plot.style_line)
+
+approachRaw = close > support and low <= nearThreshold and low > support
+touchRaw = low <= support and low[1] > support[1]
+var int lastApproachBar = na
+var int lastTouchBar = na
+supportApproach = barstate.isconfirmed and approachRaw and (na(lastApproachBar) or bar_index - lastApproachBar > cooldownBars)
+supportTouch = barstate.isconfirmed and touchRaw and (na(lastTouchBar) or bar_index - lastTouchBar > cooldownBars)
+if supportApproach
+    lastApproachBar := bar_index
+if supportTouch
+    lastTouchBar := bar_index
+
+plotshape(supportApproach, title="Jev — zbliżenie supportu", style=shape.triangleup, location=location.belowbar, color=color.yellow, size=size.tiny)
+plotshape(supportTouch, title="Jev — dotknięcie supportu", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small)
+
+alertcondition(supportApproach, title="Jev — zbliżenie do supportu", message="{\"event\":\"spot_compass_support\",\"signal\":\"ZBLIZENIE_SUPPORTU\",\"symbol\":\"{{ticker}}\",\"timeframe\":\"{{interval}}\",\"close\":{{close}},\"bar_time\":\"{{time}}\"}")
+alertcondition(supportTouch, title="Jev — dotknięcie supportu", message="{\"event\":\"spot_compass_support\",\"signal\":\"DOTKNIECIE_SUPPORTU\",\"symbol\":\"{{ticker}}\",\"timeframe\":\"{{interval}}\",\"close\":{{close}},\"bar_time\":\"{{time}}\"}")
