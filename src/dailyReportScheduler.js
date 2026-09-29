@@ -23,7 +23,7 @@ function scheduleDaily(run, options = {}) {
   let timer;
   const scheduleNext = () => {
     timer = setTimeout(async () => {
-      try { await run(); } catch (error) { console.error('Daily signal report failed:', error.message); }
+      await runSafely(run);
       scheduleNext();
     }, millisecondsUntilNextRun(new Date(), options));
   };
@@ -31,4 +31,14 @@ function scheduleDaily(run, options = {}) {
   return () => clearTimeout(timer);
 }
 
-module.exports = { millisecondsUntilNextRun, scheduleDaily };
+async function runSafely(run, onError = console.error) {
+  try {
+    await run();
+    return true;
+  } catch (error) {
+    onError('Daily signal report failed:', error.message);
+    return false;
+  }
+}
+
+module.exports = { millisecondsUntilNextRun, runSafely, scheduleDaily };

@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { buildDailySignalReport, validateWatchlistText } = require('../src/dailySignalReport');
-const { millisecondsUntilNextRun } = require('../src/dailyReportScheduler');
+const { millisecondsUntilNextRun, runSafely } = require('../src/dailyReportScheduler');
 
 const watchlist = '###MAM,NASDAQ:AVGO,###OBSERWUJE,NYSE:VST';
 
@@ -31,4 +31,11 @@ test('rejects an empty or malformed private watchlist', () => {
 test('schedules the next Warsaw report at 08:00', () => {
   const delay = millisecondsUntilNextRun(new Date('2026-01-02T06:30:00.000Z'), { hour: 8, timeZone: 'Europe/Warsaw' });
   assert.equal(delay, 30 * 60 * 1000);
+});
+
+test('runs the startup report without stopping the server after a report error', async () => {
+  const errors = [];
+  assert.equal(await runSafely(() => {}, (...args) => errors.push(args)), true);
+  assert.equal(await runSafely(() => { throw new Error('brak listy'); }, (...args) => errors.push(args)), false);
+  assert.deepEqual(errors, [['Daily signal report failed:', 'brak listy']]);
 });

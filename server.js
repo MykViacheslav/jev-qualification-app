@@ -7,7 +7,7 @@ const express = require('express');
 const { classifyLead, CATEGORIES } = require('./src/jevClient');
 const { alertToSnapshot, storeSnapshot, validateAlert } = require('./src/tradingViewAlerts');
 const { createAndStoreDailySignalReport, validateWatchlistText } = require('./src/dailySignalReport');
-const { scheduleDaily } = require('./src/dailyReportScheduler');
+const { runSafely, scheduleDaily } = require('./src/dailyReportScheduler');
 
 const app = express();
 app.use(express.json());
@@ -88,6 +88,7 @@ function runDailySignalReport() {
 }
 
 if (process.env.DAILY_REPORT_ENABLED === 'true') {
+  void runSafely(runDailySignalReport);
   scheduleDaily(runDailySignalReport, { hour: Number(process.env.DAILY_REPORT_HOUR || 8), timeZone: process.env.DAILY_REPORT_TIMEZONE || 'Europe/Warsaw' });
 }
 
