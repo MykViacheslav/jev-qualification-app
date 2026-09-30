@@ -44,6 +44,7 @@ app.post('/api/investments/tradingview/:token', express.text({ type: '*/*', limi
     const snapshot = alertToSnapshot(alert);
     const inboxDirectory = process.env.TRADINGVIEW_INBOX_DIR || path.join(__dirname, 'data', 'investments', 'inbox');
     const filePath = storeSnapshot(snapshot, inboxDirectory);
+    console.log(`TradingView alert stored: ${alert.symbol} ${alert.signal} ${alert.timeframe}`);
     return res.status(202).json({ stored: true, file: path.basename(filePath), partial: true });
   } catch (error) {
     console.warn('TradingView alert rejected:', error.message);
