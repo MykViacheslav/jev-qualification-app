@@ -23,29 +23,69 @@ function intervalName(timeframe) {
   return value;
 }
 
+function firstDefined(object, names) {
+  return names.map((name) => object?.[name]).find((value) => value !== undefined && value !== null && value !== '');
+}
+
+function numberOrNull(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const normalized = typeof value === 'string' ? value.trim().replace(',', '.') : value;
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : null;
+}
+
 function parseTimestamp(value) {
-  const date = new Date(value);
+  const numeric = numberOrNull(value);
+  const epochMilliseconds = numeric !== null && Number.isInteger(numeric)
+    ? (numeric < 100_000_000_000 ? numeric * 1000 : numeric)
+    : null;
+  const date = new Date(epochMilliseconds ?? value);
   if (Number.isNaN(date.getTime())) throw new Error('bar_time must be a valid timestamp.');
   return date.toISOString();
 }
 
-function validateAlert(body) {
-  const required = ['event', 'signal', 'symbol', 'timeframe', 'close', 'bar_time'];
-  if (!body || required.some((field) => body[field] === undefined || body[field] === null || body[field] === '')) {
-    throw new Error('TradingView alert must include event, signal, symbol, timeframe, close, and bar_time.');
+function parseAlertPayload(payload) {
+  if (payload && typeof payload === 'object') return payload;
+  if (typeof payload !== 'string' || !payload.trim()) throw new Error('TradingView alert body is empty.');
+
+  const raw = payload.trim();
+  const candidates = [raw, raw.replace(/\b(?:na|NaN|Infinity|-Infinity)\b/g, 'null')];
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // Try the next safe normalization before rejecting the alert.
+    }
   }
-  const close = Number(body.close);
+  throw new Error('TradingView alert body is not valid JSON.');
+}
+
+function validateAlert(payload, { receivedAt = new Date() } = {}) {
+  const body = parseAlertPayload(payload);
+  const nestedMessage = typeof body.message === 'string' && body.message.trim().startsWith('{')
+    ? parseAlertPayload(body.message)
+    : body;
+  const event = firstDefined(nestedMessage, ['event', 'type']) || 'tradingview_alert';
+  const signal = firstDefined(nestedMessage, ['signal', 'action', 'alert_name']);
+  const symbol = firstDefined(nestedMessage, ['symbol', 'ticker', 'instrument']);
+  const timeframe = firstDefined(nestedMessage, ['timeframe', 'interval', 'tf']);
+  const close = numberOrNull(firstDefined(nestedMessage, ['close', 'price', 'last']));
+  const barTime = firstDefined(nestedMessage, ['bar_time', 'time', 'timestamp', 'timenow']) || receivedAt.toISOString();
+
+  if (!signal || !symbol || !timeframe || close === null) {
+    throw new Error('TradingView alert must include signal, symbol, timeframe, and a numeric close or price.');
+  }
   if (!Number.isFinite(close)) throw new Error('close must be a number.');
 
   return {
-    event: String(body.event),
-    signal: String(body.signal),
-    symbol: String(body.symbol),
-    timeframe: intervalName(body.timeframe),
+    event: String(event),
+    signal: String(signal),
+    symbol: String(symbol),
+    timeframe: intervalName(timeframe),
     close,
-    support: body.support === undefined ? null : Number(body.support),
-    warning: body.warning === undefined ? null : Number(body.warning),
-    bar_time: parseTimestamp(body.bar_time),
+    support: numberOrNull(firstDefined(nestedMessage, ['support', 'support_price', 'band_lower'])),
+    warning: numberOrNull(firstDefined(nestedMessage, ['warning', 'resistance', 'band_upper'])),
+    bar_time: parseTimestamp(barTime),
   };
 }
 
@@ -76,4 +116,4 @@ function storeSnapshot(snapshot, inboxDirectory) {
   return filePath;
 }
 
-module.exports = { alertToSnapshot, storeSnapshot, validateAlert };
+module.exports = { alertToSnapshot, parseAlertPayload, storeSnapshot, validateAlert };

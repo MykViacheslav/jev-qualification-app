@@ -53,6 +53,25 @@ test('keeps approach and touch of support distinct', () => {
 test('rejects a webhook payload that is not a Spot Compass JSON alert', () => {
   assert.throws(
     () => validateAlert({ message: 'AVGO przekroczył 352,81' }),
-    /event, signal, symbol, timeframe, close, and bar_time/,
+    /signal, symbol, timeframe, and a numeric close or price/,
   );
+});
+
+test('accepts scanner field aliases and a Unix timestamp from a raw TradingView message', () => {
+  const alert = validateAlert('{"signal":"MOZLIWY_SUPPORT","ticker":"GPW:KRU","interval":"360","price":"381,10","time":1790789760}');
+
+  assert.equal(alert.event, 'tradingview_alert');
+  assert.equal(alert.symbol, 'GPW:KRU');
+  assert.equal(alert.timeframe, '6H');
+  assert.equal(alert.close, 381.1);
+  assert.equal(alert.bar_time, '2026-09-30T17:36:00.000Z');
+});
+
+test('uses the receipt time when a valid scanner message lacks a source timestamp', () => {
+  const alert = validateAlert(
+    '{"signal":"MOZLIWY_SUPPORT","symbol":"NYSE:FI","timeframe":"720","close":123.45}',
+    { receivedAt: new Date('2026-09-30T20:20:00.000Z') },
+  );
+
+  assert.equal(alert.bar_time, '2026-09-30T20:20:00.000Z');
 });

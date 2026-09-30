@@ -10,7 +10,6 @@ const { createAndStoreDailySignalReport, validateWatchlistText } = require('./sr
 const { runSafely, scheduleDaily } = require('./src/dailyReportScheduler');
 
 const app = express();
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/categories', (req, res) => {
@@ -32,7 +31,7 @@ app.post('/api/qualify', async (req, res) => {
   }
 });
 
-app.post('/api/investments/tradingview/:token', (req, res) => {
+app.post('/api/investments/tradingview/:token', express.text({ type: '*/*', limit: '100kb' }), (req, res) => {
   if (!process.env.TRADINGVIEW_WEBHOOK_TOKEN) {
     return res.status(503).json({ error: 'TradingView webhook is not configured.' });
   }
@@ -47,9 +46,12 @@ app.post('/api/investments/tradingview/:token', (req, res) => {
     const filePath = storeSnapshot(snapshot, inboxDirectory);
     return res.status(202).json({ stored: true, file: path.basename(filePath), partial: true });
   } catch (error) {
+    console.warn('TradingView alert rejected:', error.message);
     return res.status(400).json({ error: error.message || 'Invalid TradingView alert.' });
   }
 });
+
+app.use(express.json());
 
 function hasValidInvestmentToken(req) {
   return Boolean(process.env.TRADINGVIEW_WEBHOOK_TOKEN) && req.params.token === process.env.TRADINGVIEW_WEBHOOK_TOKEN;

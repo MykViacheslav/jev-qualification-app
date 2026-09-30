@@ -7,11 +7,13 @@ services:
       - sh
       - -ec
       - |
-        if [ ! -f package.json ]; then
+        if [ ! -d .git ]; then
           apk add --no-cache git
           git clone --depth 1 --branch main https://github.com/MykViacheslav/jev-qualification-app.git .
-          npm ci --omit=dev
         fi
+        git fetch --depth 1 origin main
+        git reset --hard origin/main
+        npm ci --omit=dev
         exec npm start
     environment:
       PORT: "3000"
